@@ -1,6 +1,17 @@
 ##-------------------------------------------------
 ## gc correction functions
 ##
+#' Title
+#'
+#' @param rdo
+#' @param meth
+#' @param outlierPercentage
+#' @param resolution
+#'
+#' @return
+#' @export
+#'
+#' @examples
 gcCorrect <- function(rdo, meth=FALSE, outlierPercentage=0.01, resolution=0.001){
   if(verbose){
     cat("correcting for GC bias",date(),"\n")
@@ -72,6 +83,18 @@ gcCorrect <- function(rdo, meth=FALSE, outlierPercentage=0.01, resolution=0.001)
 ##-------------------------------------------------
 ## mapability correction functions
 ##
+#' Title
+#'
+#' @param rdo
+#' @param outlierPercentage
+#' @param minMapability
+#' @param resolution
+#' @param skipCorrection
+#'
+#' @return
+#' @export
+#'
+#' @examples
 mapCorrect <- function(rdo, outlierPercentage=0.01, minMapability=0.60, resolution=0.01, skipCorrection=FALSE){
 
   ##have to correct each read length individually
@@ -134,6 +157,15 @@ mapCorrect <- function(rdo, outlierPercentage=0.01, minMapability=0.60, resoluti
 ##---------------------------------------------------
 ## adjust gc content to account for bisulfite sequencing
 ## and methylated bases (that don't get bs-converted)
+#' Title
+#'
+#' @param rdo
+#' @param chr
+#'
+#' @return
+#' @export
+#'
+#' @examples
 methAdjust <- function(rdo,chr){
   readBin = rdo@chrs[[chr]]
   params = rdo@binParams
@@ -206,6 +238,16 @@ methAdjust <- function(rdo,chr){
 ## match the GC content values up with the appropriate
 ## genomic windows
 
+#' Title
+#'
+#' @param rdo
+#' @param chr
+#' @param readlength
+#'
+#' @return
+#' @export
+#'
+#' @examples
 binGC <- function(rdo, chr, readlength){
   binNum = length(rdo@chrs[[chr]][,1])
   len = getChrLength(chr,rdo@entrypoints)
@@ -232,6 +274,16 @@ binGC <- function(rdo, chr, readlength){
 #--------------------------------------------------
 ## match the mapability content values up with the appropriate
 ## genomic windows
+#' Title
+#'
+#' @param rdo
+#' @param chr
+#' @param readlength
+#'
+#' @return
+#' @export
+#'
+#' @examples
 binMap <- function(rdo, chr, readlength){
   binNum = length(rdo@chrs[[chr]][,1])
   len = getChrLength(chr,rdo@entrypoints)
@@ -259,6 +311,15 @@ binMap <- function(rdo, chr, readlength){
 ## remove the specified percentage of outliers from
 ## the high and low ends to avoid overfitting
 ##
+#' Title
+#'
+#' @param nonNAbins
+#' @param outlierPercentage
+#'
+#' @return
+#' @export
+#'
+#' @examples
 stripOutliers <- function(nonNAbins,outlierPercentage){
   num=round(length(nonNAbins$avgreads)*outlierPercentage)
   top = sort(nonNAbins$avgreads)[length(nonNAbins$avgreads)-num]
@@ -276,6 +337,16 @@ stripOutliers <- function(nonNAbins,outlierPercentage){
 ##--------------------------------------------------
 ## restore the outliers, setting their corrected
 ## value to the mean of the windows around them
+#' Title
+#'
+#' @param results
+#' @param rmlist
+#' @param preOutliers
+#'
+#' @return
+#' @export
+#'
+#' @examples
 returnOutliers <- function(results,rmlist,preOutliers){
 
   ##first, group adjacent windows that were removed
@@ -339,6 +410,20 @@ returnOutliers <- function(results,rmlist,preOutliers){
 ##--------------------------------------------------
 ## correct for bias
 ##
+#' Title
+#'
+#' @param rdo
+#' @param libNum
+#' @param readLength
+#' @param libName
+#' @param outlierPercentage
+#' @param corrResolution
+#' @param type
+#'
+#' @return
+#' @export
+#'
+#' @examples
 loessCorrect <- function(rdo, libNum, readLength, libName, outlierPercentage=0.01, corrResolution=0.001, type="gc"){
 
 
@@ -421,6 +506,15 @@ loessCorrect <- function(rdo, libNum, readLength, libName, outlierPercentage=0.0
 ## for mapability or gc in the inital model, and any adjustments
 ## to this med will affect every window equally, such that
 ## the relative copy-number is preserved.
+#' Title
+#'
+#' @param pos
+#' @param numReads
+#'
+#' @return
+#' @export
+#'
+#' @examples
 balancedCenter <- function(pos, numReads){
   center = 0
   netChange = sum((pos-center)*numReads)
@@ -453,6 +547,14 @@ balancedCenter <- function(pos, numReads){
 ##
 doCorrection <- function(bin, libNum, corrResolution, theAdj, chr, type){
 
+#' Title
+#'
+#' @param x
+#'
+#' @return
+#' @export
+#'
+#' @examples
   doAdjust <- function(x){
     #print(x[libNum])
     if( (!(is.na(x[libNum]))) & (!(is.na(x[type])))){
@@ -484,6 +586,14 @@ doCorrection <- function(bin, libNum, corrResolution, theAdj, chr, type){
 ##
 combinePercBins <- function(a,b){
 
+#' Title
+#'
+#' @param x
+#'
+#' @return
+#' @export
+#'
+#' @examples
   avgWNAs <- function(x){
     if(is.na(x[1])){
       if(is.na(x[2])){
@@ -527,6 +637,18 @@ combinePercBins <- function(a,b){
 ##---------------------------------------------------------
 ## calculate the number of reads in each percentage bin
 ##
+#' Title
+#'
+#' @param bin
+#' @param libNum
+#' @param windSize
+#' @param chr
+#' @param type
+#'
+#' @return
+#' @export
+#'
+#' @examples
 makeCorrBins <- function(bin,libNum,windSize,chr,type){
   ##create vectors for percentages and number of reads
   myBin <- c()
@@ -552,6 +674,17 @@ makeCorrBins <- function(bin,libNum,windSize,chr,type){
 ##---------------------------------------------------------
 ## calculate the number of reads in each percentage bin
 ##
+#' Title
+#'
+#' @param rdo
+#' @param libNum
+#' @param windSize
+#' @param type
+#'
+#' @return
+#' @export
+#'
+#' @examples
 makeCorrBinsMedian <- function(rdo,libNum,windSize,type){
   bins = makeMapDf(rdo,libNum)
 

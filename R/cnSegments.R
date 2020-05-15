@@ -2,6 +2,19 @@
 ## Use circular binary segmentation to merge adjacent
 ## windows and identify breakpoints
 ##
+#' Title
+#'
+#' @param rdo
+#' @param onlyAlts
+#' @param minWidth
+#' @param alpha
+#' @param undoSD
+#' @param rmGaps
+#'
+#' @return
+#' @export
+#'
+#' @examples
 cnSegments <- function(rdo,onlyAlts=FALSE,minWidth=3,alpha=0.01,undoSD=2,rmGaps=TRUE){
   library('DNAcopy')
   df = makeDfLog(rdo@chrs,rdo@binParams)
@@ -12,6 +25,20 @@ cnSegments <- function(rdo,onlyAlts=FALSE,minWidth=3,alpha=0.01,undoSD=2,rmGaps=
 ## Use circular binary segmentation to merge adjacent
 ## windows and identify breakpoints from tumor/normal samples
 ##
+#' Title
+#'
+#' @param rdo.ref
+#' @param rdo.test
+#' @param onlyAlts
+#' @param minWidth
+#' @param alpha
+#' @param undoSD
+#' @param rmGaps
+#'
+#' @return
+#' @export
+#'
+#' @examples
 cnSegments.paired <- function(rdo.ref,rdo.test,onlyAlts=FALSE,minWidth=3,alpha=0.01,undoSD=2,rmGaps=TRUE){
   library('DNAcopy')
 
@@ -31,6 +58,22 @@ cnSegments.paired <- function(rdo.ref,rdo.test,onlyAlts=FALSE,minWidth=3,alpha=0
 ## run circular binary segmentation to identify discrete
 ## segments of gain and loss
 ##
+#' Title
+#'
+#' @param rdo
+#' @param gd2
+#' @param params
+#' @param entrypoints
+#' @param onlyAlts
+#' @param minWidth
+#' @param alpha
+#' @param rmGaps
+#' @param undoSD
+#'
+#' @return
+#' @export
+#'
+#' @examples
 getSegs <- function(rdo, gd2, params, entrypoints, onlyAlts, minWidth=3, alpha=0.01, rmGaps=TRUE, undoSD=2){
   CNA.object <-CNA( genomdat = gd2$score, chrom = gd2$chr, maploc =gd2$pos, data.type = 'logratio')
 
@@ -128,6 +171,15 @@ getSegs <- function(rdo, gd2, params, entrypoints, onlyAlts, minWidth=3, alpha=0
 ##----------------------------------------------
 ## merge segments if they are adjacent and both gains or losses
 ## useful for some types of plotting
+#' Title
+#'
+#' @param segs
+#' @param rdo
+#'
+#' @return
+#' @export
+#'
+#' @examples
 mergeSegs <- function(segs,rdo){
   df = NULL
   params=rdo@binParams
@@ -167,6 +219,15 @@ mergeSegs <- function(segs,rdo){
 ##-----------------------------------------------
 ## subset out just the alterations from the copy number segments
 ##
+#' Title
+#'
+#' @param segs
+#' @param rdo
+#'
+#' @return
+#' @export
+#'
+#' @examples
 getAlts <- function(segs,rdo){
   return(segs[which(segs$seg.mean > rdo@binParams$gainThresh | segs$seg.mean < rdo@binParams$lossThresh),])
 }
@@ -183,6 +244,16 @@ getAlts <- function(segs,rdo){
 ##
 trimSegmentEnds <- function(segs,rdo){
 
+#' Title
+#'
+#' @param chr
+#' @param asegs
+#' @param bins
+#'
+#' @return
+#' @export
+#'
+#' @examples
   doTrimming <- function(chr, asegs, bins){
     ##find first pos that doesn't have an NA
     st=1
@@ -237,6 +308,17 @@ trimSegmentEnds <- function(segs,rdo){
 ##-----------------------------------------------
 ## remove segments that overlap at least n% with a reference assembly gap
 ##
+#' Title
+#'
+#' @param segs
+#' @param rdo
+#' @param maxOverlap
+#' @param gapExpansion
+#'
+#' @return
+#' @export
+#'
+#' @examples
 removeGapSpanningSegments <- function(segs,rdo,maxOverlap=0.75,gapExpansion=1.0){
   count = length(segs[,1]);
 
@@ -256,8 +338,8 @@ removeGapSpanningSegments <- function(segs,rdo,maxOverlap=0.75,gapExpansion=1.0)
     gaps[,3] = gaps[,3]+exp
     gaps[(gaps[,2]<0),2]=0 #no negative coords    exp=round(((sizes*gapExpansion)-sizes)/2)
   }
-  
-  
+
+
   #intersect each chromosome separately
   newsegs = foreach(chr=names(rdo@chrs), .combine="rbind") %do%{
 
@@ -296,15 +378,35 @@ removeGapSpanningSegments <- function(segs,rdo,maxOverlap=0.75,gapExpansion=1.0)
 ## (probably mapping/assembly errors). Use the normal sample
 ## for this, not the tumor, lest we confuse regions of amp/del
 ## for real events.
+#' Title
+#'
+#' @param segs
+#' @param rdo
+#'
+#' @return
+#' @export
+#'
+#' @examples
 removeCoverageArtifacts <- function(segs,rdo){
   count = length(segs[,1]);
   if(count < 1){ #if no segs are input, can't do any filtering!
     return(segs)
   }
 
+#' Title
+#'
+#' @param df
+#' @param chr
+#' @param st
+#' @param sp
+#'
+#' @return
+#' @export
+#'
+#' @examples
   getMedianDepth <- function(df, chr, st, sp){
     d = df[which(df$chr==chr & df$pos>=st & df$pos<=sp),]
-    
+
     ##take missing (low-map) bins into account here:
     depths = d$score
     expectedWinds=round(((sp-st)+1)/rdo@params$binSize)
@@ -321,14 +423,14 @@ removeCoverageArtifacts <- function(segs,rdo){
   ##get a dataframe with all the counts
   df = makeDf(rdo@chrs,rdo@binParams)
   df$chr=as.character(df$chr)
-  
+
   for(i in 1:length(segs[,1])){
     med = getMedianDepth(df, segs[i,1], segs[i,2], segs[i,3])
     if((med < rdo@binParams$med/5) ||
        (med > rdo@binParams$med*5)){
       keep[i] = FALSE
     }
-  } 
+  }
 
   print(paste("coverage-filtering removed",count-length(segs[keep,1]),"segments"));
   return(segs[keep,])

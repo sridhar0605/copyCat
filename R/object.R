@@ -9,6 +9,14 @@ library('IRanges')
 ##
 initRdClass <- function(){
   setClass("rdObject", representation(params="data.frame", binParams="data.frame", entrypoints="data.frame", readInfo="data.frame", chrs="list"))
+#' Title
+#'
+#' @param rdObject
+#'
+#' @return
+#' @export
+#'
+#' @examples
   setMethod("initialize", "rdObject",
           function(.Object){
             .Object@params=data.frame()
@@ -16,13 +24,33 @@ initRdClass <- function(){
             .Object@entrypoints=data.frame()
             .Object@readInfo=data.frame()
             .Object@chrs=as.list(c())
-            return(.Object)              
+            return(.Object)
           })
 }
 
 ##-------------------------------------------------
 ## Fill the rd object with the appropriate parameters
 ##
+#' Title
+#'
+#' @param rdo
+#' @param annotationDirectory
+#' @param outputDirectory
+#' @param inputFile
+#' @param inputType
+#' @param maxCores
+#' @param binSize
+#' @param gcWindowSize
+#' @param fdr
+#' @param perLibrary
+#' @param perReadLength
+#' @param readLength
+#' @param verbose
+#'
+#' @return
+#' @export
+#'
+#' @examples
 setParams <- function(rdo, annotationDirectory, outputDirectory, inputFile, inputType,
                       maxCores=0, #0 means use all available cores
                       binSize=0,  #0 means let copyCat choose (or infer from bins file)
@@ -35,7 +63,7 @@ setParams <- function(rdo, annotationDirectory, outputDirectory, inputFile, inpu
   if(!(file.exists(inputFile))){
     print(paste("file \"",inputFile,"\" does not exist"))
     stop()
-  }  
+  }
   ## if(binSize==0){
   ##   if(inputType=="bins"){
   ##     print("If a bin file is provided, the binSize must be specified (and match the contents of the bin file)")
@@ -44,7 +72,7 @@ setParams <- function(rdo, annotationDirectory, outputDirectory, inputFile, inpu
   ## }
 
   verbose <<- verbose;
-  
+
   #fill the params data frame
   rdo@params <- data.frame(annotationDirectory=annotationDirectory,
                            outputDirectory=outputDirectory,
@@ -62,12 +90,12 @@ setParams <- function(rdo, annotationDirectory, outputDirectory, inputFile, inpu
   if(inputType == "bins"){
     rdo@params$binFile=inputFile
   }
-  
+
   ##fill entrypoints
   rdo@entrypoints=readEntrypoints(rdo@params$annotationDirectory)
   ## TODO - maybe only do this if we're estimating window size
   #rdo@entrypoints=addMapability(rdo@entrypoints,annotationDirectory)
-  
+
   ##set multicore options if specified
   if(maxCores > 0){
     options(cores = maxCores)
@@ -81,8 +109,8 @@ setParams <- function(rdo, annotationDirectory, outputDirectory, inputFile, inpu
   if(!(file.exists(paste(outputDirectory,"/plots",sep="")))){
     dir.create(paste(outputDirectory,"/plots",sep=""))
   }
-  
-  return(rdo)  
+
+  return(rdo)
 }
 
 
@@ -95,13 +123,13 @@ setParams <- function(rdo, annotationDirectory, outputDirectory, inputFile, inpu
 ## calculateBinSize <-function(rdo, overdispersion=3, percCnGain=0.05, percCnLoss=0.05){
 ##   params = rdo@params
 ##   entrypoints = rdo@entrypoints
-  
+
 ##   if(params$inputType != "bam"){
 ##     stop("optimal window size can only be calculated from bam input")
 ##   }
-   
+
 ##   numReads = getNumReads(params$inputFile,params$outputDirectory)
-  
+
 ##   ## get genome size from entrypoints file, adjust by mappability estimates
 ##   genomeSize = sum(entrypoints$length)
 ##   mapPerc=sum(entrypoints$mapPerc*entrypoints$length)/sum(entrypoints$length)
@@ -201,6 +229,16 @@ setParams <- function(rdo, annotationDirectory, outputDirectory, inputFile, inpu
 ## else, sum the lengths of the annotations, and
 ## create the cov total file
 ##
+#' Title
+#'
+#' @param entrypoints
+#' @param annoDir
+#' @param readLength
+#'
+#' @return
+#' @export
+#'
+#' @examples
 addMapability <-function(entrypoints, annoDir, readLength=100){
   ##first, we need the mappable regions
   annodir = getAnnoDir(annoDir, readLength)

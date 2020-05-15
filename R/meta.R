@@ -1,6 +1,30 @@
 ##-----------------------------------------------------------
 ## pull out the subset of reads with a specific read length
 ##
+#' Title
+#'
+#' @param annotationDirectory
+#' @param outputDirectory
+#' @param inputFile
+#' @param inputType
+#' @param maxCores
+#' @param binSize
+#' @param gcWindowSize
+#' @param fdr
+#' @param perLibrary
+#' @param perReadLength
+#' @param readLength
+#' @param samtoolsFile
+#' @param samtoolsFileFormat
+#' @param peakwiggle
+#' @param snpBinSize
+#' @param verbose
+#' @param purity
+#'
+#' @return
+#' @export
+#'
+#' @examples
 runSingleSampleAnalysis <- function(annotationDirectory, outputDirectory, inputFile,
                                     inputType, maxCores=0, #0 means use all available cores
                                     binSize=0,  #0 means let copyCat choose (or infer from bins file)
@@ -53,6 +77,37 @@ runSingleSampleAnalysis <- function(annotationDirectory, outputDirectory, inputF
 ##-----------------------------------------------------------
 ## pull out the subset of reads with a specific read length
 ##
+#' Title
+#'
+#' @param annotationDirectory
+#' @param outputDirectory
+#' @param normal
+#' @param tumor
+#' @param inputType
+#' @param maxCores
+#' @param binSize
+#' @param gcWindowSize
+#' @param fdr
+#' @param perLibrary
+#' @param perReadLength
+#' @param readLength
+#' @param verbose
+#' @param outputSingleSample
+#' @param tumorSamtoolsFile
+#' @param normalSamtoolsFile
+#' @param samtoolsFileFormat
+#' @param dumpBins
+#' @param minWidth
+#' @param doGcCorrection
+#' @param rDataFile
+#' @param minMapability
+#' @param purity
+#' @param maxGapOverlap
+#'
+#' @return
+#' @export
+#'
+#' @examples
 runPairedSampleAnalysis <- function(annotationDirectory, outputDirectory, normal, tumor,
                                     inputType, maxCores=0, #0 means use all available cores
                                     binSize=0,  #0 means let copyCat choose (or infer from bins file)
@@ -65,7 +120,7 @@ runPairedSampleAnalysis <- function(annotationDirectory, outputDirectory, normal
                                     minMapability=0.60, purity=1, maxGapOverlap=0.75){
 
   verbose <<- verbose
-  registerDoMC()  
+  registerDoMC()
   ##create the object
   rdo = new("rdObject")
   ##set the parameters
@@ -146,7 +201,7 @@ runPairedSampleAnalysis <- function(annotationDirectory, outputDirectory, normal
   alts = alts[alts$num.mark >= 10,]
   ##remove alts with abnormally high or low coverage
   alts = removeCoverageArtifacts(alts,rdo)
-  
+
   ##write some output
   writeSegs(segs,rdo,"segs.paired.dat")
   writeSegs(alts,rdo,"alts.paired.dat")
@@ -156,14 +211,14 @@ runPairedSampleAnalysis <- function(annotationDirectory, outputDirectory, normal
     save.image(paste(outputDirectory,rDataFile,sep="/"))
   }
 
-  
+
   if(outputSingleSample){
     ##segment the non-paired data using CBS
     segs = cnSegments(rdo2)
     ##set gain and loss thresholds
     diff=0.5*purity
     rdo2@binParams$gainThresh = 2.0+diff
-    rdo2@binParams$lossThresh = 2.0-diff  
+    rdo2@binParams$lossThresh = 2.0-diff
 
     ##write some output
     writeSegs(segs,rdo2,"segs.singleSample.tumor.dat")
@@ -190,5 +245,5 @@ runPairedSampleAnalysis <- function(annotationDirectory, outputDirectory, normal
 
   dumpParams(rdo)
   dumpParams(rdo2)
-  
+
 }

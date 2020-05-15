@@ -1,6 +1,23 @@
 ##--------------------------------------------------
 ## plot the loess correction for gc content
 ##
+#' Title
+#'
+#' @param med
+#' @param gc
+#' @param reads
+#' @param fitted
+#' @param fixed
+#' @param fixedfit
+#' @param rdo
+#' @param libNum
+#' @param readLength
+#' @param libName
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plotGcLoess <- function(med,gc,reads,fitted,fixed,fixedfit,rdo,libNum,readLength,libName){
   params=rdo@params
   if(is.null(params$prefix)){
@@ -21,13 +38,30 @@ plotGcLoess <- function(med,gc,reads,fitted,fixed,fixedfit,rdo,libNum,readLength
   plot(gc,fixed,ylim=c(0,ymax),ylab="mean # reads", main="GC content bias - post LOESS correction", xlab="GC content %")
   points(gc,fixedfit,col="green",pch=20)
   abline(h=med,col="red")
-  
-  dev.off()  
+
+  dev.off()
 }
 
 ##--------------------------------------------------
 ## plot the loess correction for mapability content
 ##
+#' Title
+#'
+#' @param med
+#' @param map
+#' @param reads
+#' @param fitted
+#' @param fixed
+#' @param fixedfit
+#' @param rdo
+#' @param libNum
+#' @param readLength
+#' @param libName
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plotMapLoess <- function(med,map,reads,fitted,fixed,fixedfit,rdo,libNum,readLength,libName){
   params=rdo@params
   if(is.null(params$prefix)){
@@ -48,8 +82,8 @@ plotMapLoess <- function(med,map,reads,fitted,fixed,fixedfit,rdo,libNum,readLeng
   plot(map,fixed,ylim=c(0,ymax),ylab="mean # reads", main="Mapability bias - post LOESS correction", xlab="Mapability content %")
   points(map,fixedfit,col="green",pch=20)
   abline(h=med,col="red")
-  
-  dev.off()  
+
+  dev.off()
 }
 
 
@@ -57,9 +91,25 @@ plotMapLoess <- function(med,map,reads,fitted,fixed,fixedfit,rdo,libNum,readLeng
 ## given a set of parameters, plot the peaks
 ## and thresholds
 ##
+#' Title
+#'
+#' @param windowSize
+#' @param genomeSize
+#' @param divGain
+#' @param divLoss
+#' @param fdr
+#' @param numReads
+#' @param oDisp
+#' @param ploidyPerc
+#' @param med
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plotWindows <- function(windowSize, genomeSize, divGain, divLoss, fdr, numReads, oDisp, ploidyPerc, med){
   numWinds <- genomeSize/windowSize
-  
+
   ##generate distributions
   d2 <- rpois.od(numWinds*ploidyPerc$diploidPerc,med,oDisp)
   d3 <- rpois.od(numWinds*ploidyPerc$triploidPerc,(med*1.5),oDisp)
@@ -79,17 +129,27 @@ plotWindows <- function(windowSize, genomeSize, divGain, divLoss, fdr, numReads,
 ##---------------------------------------------------------
 ## Internal function to wrap plotting
 ##
+#' Title
+#'
+#' @param rdo
+#' @param segs
+#' @param chr
+#'
+#' @return
+#' @export
+#'
+#' @examples
 doSegPlot <- function(rdo,segs,chr){
   st = 1
   sp = rdo@entrypoints[which(rdo@entrypoints$chr == chr),]$length
   ymax=3 #multiplied by the median to get height
   med = rdo@binParams$med
-  
+
   winds = rdo@chrs[[chr]]$rd
-  binSize = rdo@binParams$binSize  
+  binSize = rdo@binParams$binSize
   pos = seq(binSize/2,(((length(winds)-1)*binSize)-binSize/2),binSize)
   pos = append(pos,sp)
-  
+
   par(mar=c(5, 4, 4, 4) + 0.1)
   plot(pos,winds,ylab="number of reads", xlab="position (bp)", ylim=c(0,(median(winds,na.rm=T)*ymax)), pch=18, col=rgb(0,0,0,0.5), main=paste("Chr",chr,sep=""))
 
@@ -101,31 +161,41 @@ doSegPlot <- function(rdo,segs,chr){
   for(i in 1:length(asegs[,1])){
     segments(asegs[i,2],(asegs[i,5]*(med/2)),asegs[i,3],(asegs[i,5]*(med/2)), col="red",lwd=3)
   }
-  
+
   par(new=T)
   plot(-10000,-10000, ylim=c(0,(median(winds,na.rm=T)*(ymax*2))/med), xlim=c(1,sp), axes=F,xlab="", ylab="")
   axis(4, ylim=c(0,(median(winds,na.rm=T)*(ymax*2))/med), col="red",col.axis="red")
   abline(h=seq(0,100,1),col="grey50",lty=3)
   abline(v=seq(1,sp,2000000),col="grey50",lty=2)
-  mtext("Copy Number",side=4,col="red",line=2.5)  
+  mtext("Copy Number",side=4,col="red",line=2.5)
 
 }
 
 ##----------------------------------------------
 ## plot the segments for a given chromosome
 ##
+#' Title
+#'
+#' @param rdo
+#' @param segs
+#' @param chr
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plotSegs <- function(rdo,segs,chr){
   pdf(paste(rdo@params$outputDirectory,"/plots/points.",chr,".pdf",sep=""),width=12,height=4)
   st = 1
   sp = rdo@entrypoints[which(rdo@entrypoints$chr == chr),]$length
   ymax=3 #multiplied by the median to get height
   med = rdo@binParams$med
-  
+
   winds = rdo@chrs[[chr]]$rd
-  binSize = rdo@binParams$binSize  
+  binSize = rdo@binParams$binSize
   pos = seq(binSize/2,(((length(winds)-1)*binSize)-binSize/2),binSize)
   pos = append(pos,sp)
-  
+
   par(mar=c(5, 4, 4, 4) + 0.1)
   plot(pos,winds,ylab="number of reads", xlab="position (bp)", ylim=c(0,(median(winds,na.rm=T)*ymax)), pch=18, col=rgb(0,0,0,0.5), main=paste("Chr",chr,sep=""))
 
@@ -137,7 +207,7 @@ plotSegs <- function(rdo,segs,chr){
   for(i in 1:length(asegs[,1])){
     segments(asegs[i,2],(asegs[i,5]*(med/2)),asegs[i,3],(asegs[i,5]*(med/2)), col="red",lwd=3)
   }
-  
+
   par(new=T)
   plot(-10000,-10000, ylim=c(0,(median(winds,na.rm=T)*(ymax*2))/med), xlim=c(1,sp), axes=F,xlab="", ylab="")
   axis(4, ylim=c(0,(median(winds,na.rm=T)*(ymax*2))/med), col="red",col.axis="red")
@@ -151,6 +221,17 @@ plotSegs <- function(rdo,segs,chr){
 ##----------------------------------------------
 ## plot the segments for a given chromosome
 ##
+#' Title
+#'
+#' @param rdo.ref
+#' @param rdo.test
+#' @param segs
+#' @param chr
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plotSegsPairedLog <- function(rdo.ref, rdo.test, segs,chr){
   pdf(paste(rdo.ref@params$outputDirectory,"/plots/points.",chr,".paired.log.pdf",sep=""),width=12,height=4)
   st = 1
@@ -171,18 +252,29 @@ plotSegsPairedLog <- function(rdo.ref, rdo.test, segs,chr){
   for(i in 1:length(asegs[,1])){
     segments(asegs[i,2], asegs[i,5], asegs[i,3], asegs[i,5], col="red", lwd=3)
   }
-  
+
   abline(v=seq(1,sp,2000000),col="grey50",lty=2)
-  
+
   dev.off()
 }
 
 ##----------------------------------------------
 ## plot the segments for a given chromosome
 ##
+#' Title
+#'
+#' @param rdo.ref
+#' @param rdo.test
+#' @param segs
+#' @param chr
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plotSegsPaired <- function(rdo.ref, rdo.test, segs,chr){
   pdf(paste(rdo.ref@params$outputDirectory,"/plots/points.",chr,".paired.pdf",sep=""),width=12,height=8)
-  
+
   st = 1
   sp = rdo.ref@entrypoints[which(rdo.ref@entrypoints$chr == chr),]$length
   ymax=3 #multiplier to median
@@ -201,8 +293,8 @@ plotSegsPaired <- function(rdo.ref, rdo.test, segs,chr){
   for(i in 1:length(asegs[,1])){
     segments(asegs[i,2], asegs[i,5], asegs[i,3], asegs[i,5], col="red", lwd=3)
   }
-  
+
   abline(v=seq(1,sp,2000000),col="grey50",lty=2)
-  
+
   dev.off()
 }

@@ -1,27 +1,36 @@
 ##-----------------------------------------------
-## takes a breakpoint file in bed format and matches CNA segment 
+## takes a breakpoint file in bed format and matches CNA segment
 ## ends with the breakpoints if they're within binSize/2. It then
-## adjusts segment edges if there is exactly one breakpoint 
+## adjusts segment edges if there is exactly one breakpoint
 ## that matches.
 
+#' Title
+#'
+#' @param rdo
+#' @param segs
+#'
+#' @return
+#' @export
+#'
+#' @examples
 refineBreakpoints <- function(rdo, segs){
 
   ## read in bps from file
   bps <- read.table(paste("annotations/breakpoints.dat",sep=""), sep="\t")
 
-  ##add an index  
+  ##add an index
   segs = cbind(segs,data.frame(index=1:length(segs[,1])))
 
   ##get only the alterations
   altSegs = getAlts(segs,rdo)
 
-  #count up total length for stderr ouput 
+  #count up total length for stderr ouput
   bplen <<- c()
-  
+
   ##match them up with the edges of segments
   chr = NULL
   corrSegs = foreach(chr=names(which(table(altSegs$chrom)!=0)), .combine="rbind") %do% {
-    breakPointInt(rdo, bps[which(bps$V1==chr),], altSegs[which(altSegs$chrom == chr),], chr) 
+    breakPointInt(rdo, bps[which(bps$V1==chr),], altSegs[which(altSegs$chrom == chr),], chr)
   }
 
   ## we get arithmetic/rounding errors on
@@ -35,14 +44,14 @@ refineBreakpoints <- function(rdo, segs){
   for(i in 1:length(corrSegs[,1])){
     ##get position of row to replace
     #which(row.names(segs)==row.names(corrSegs[i,]))
-    pos = which(segs$index == corrSegs[i,]$index)    
+    pos = which(segs$index == corrSegs[i,]$index)
     segs[pos,]=corrSegs[i,]
 
     ##adjust windows ahead and behind to compensate for change
     if(pos!=1){
       if(segs[pos-1,]$chrom == segs[pos,]$chrom){
         if(segs[pos-1,]$loc.end+1 != segs[pos,]$loc.start){
-          segs[pos-1,]$loc.end = segs[pos,]$loc.start-1  
+          segs[pos-1,]$loc.end = segs[pos,]$loc.start-1
         }
       }
     }
@@ -50,7 +59,7 @@ refineBreakpoints <- function(rdo, segs){
       if(segs[pos+1,]$chrom == segs[pos,]$chrom){
         if(segs[pos+1,]$loc.start-1 != segs[pos,]$loc.end){
           segs[pos+1,]$loc.start = segs[pos,]$loc.end+1
-        }     
+        }
       }
     }
   }
@@ -60,11 +69,22 @@ refineBreakpoints <- function(rdo, segs){
     cat("average resolution of adjusted breakpoints:",mean(bplen),"\n")
   }
 
-  return(segs[,1:5]) 
+  return(segs[,1:5])
 }
 
 ##---------------------------------------------
 ## actually do the intersection
+#' Title
+#'
+#' @param rdo
+#' @param bps
+#' @param subSeg
+#' @param chr
+#'
+#' @return
+#' @export
+#'
+#' @examples
 breakPointInt <- function(rdo, bps, subSeg, chr){
 
   ##get a list of bps
@@ -81,11 +101,11 @@ breakPointInt <- function(rdo, bps, subSeg, chr){
     }
   }
   bpList = append(bpList,z[length(z)])
-  
+
   ##create a window around each bp
-  segRange <- IRanges(start <- bpList-rdo@binParams$binSize/2, end <- bpList+rdo@binParams$binSize/2)  
+  segRange <- IRanges(start <- bpList-rdo@binParams$binSize/2, end <- bpList+rdo@binParams$binSize/2)
   bpRange <- IRanges(start <- bps[,2], end <- bps[,3])
-  
+
   reg <- as.matrix(findOverlaps(segRange,bpRange))
   singles = as.numeric(names(which(table(reg[,1])==1)))
 

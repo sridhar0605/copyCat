@@ -15,10 +15,19 @@ library('doMC')
 ##-------------------------------------------------
 ## read in entrypoints file, return a data frame
 ##
+#' Title
+#'
+#' @param annoDir
+#' @param sex
+#'
+#' @return
+#' @export
+#'
+#' @examples
 readEntrypoints <- function(annoDir,sex="male"){
   p=read.table(paste(annoDir,"/entrypoints.",sex,sep=""), sep="\t", quote="",
     colClasses=c("character","numeric","numeric"))
-  names(p)=c("chr","length","ploidy")  
+  names(p)=c("chr","length","ploidy")
   return(p)
 }
 
@@ -26,6 +35,15 @@ readEntrypoints <- function(annoDir,sex="male"){
 ##--------------------------------------------------
 ## get the number of reads in the bam file from samtools flagstat
 ##
+#' Title
+#'
+#' @param inputFile
+#' @param outputDirectory
+#'
+#' @return
+#' @export
+#'
+#' @examples
 getNumReads <- function(inputFile,outputDirectory){
   ##first check to see if a flagstat exists next to the bam
   flagstat = paste(inputFile,".flagstat",sep="")
@@ -42,6 +60,14 @@ getNumReads <- function(inputFile,outputDirectory){
 ##-------------------------------------------------
 ## sum up the already-stored # of reads
 ##
+#' Title
+#'
+#' @param flist
+#'
+#' @return
+#' @export
+#'
+#' @examples
 getNumReads <- function(flist){
   len = sum(as.numeric(flist$len))
   return(len)
@@ -52,6 +78,16 @@ getNumReads <- function(flist){
 ## poisson with the negative binomial distribution
 ## d = var/mean
 ##
+#' Title
+#'
+#' @param n
+#' @param lambda
+#' @param d
+#'
+#' @return
+#' @export
+#'
+#' @examples
 rpois.od<-function (n, lambda,d=1) {
   if (d==1)
     rpois(n, lambda)
@@ -62,11 +98,29 @@ rpois.od<-function (n, lambda,d=1) {
 
 ##----------------------------------------------------
 ## return the length or ploidy for a given chr identifier
-## 
+##
+#' Title
+#'
+#' @param chr
+#' @param entries
+#'
+#' @return
+#' @export
+#'
+#' @examples
 getChrLength <- function(chr,entries){
   return(entries[which(entries$chr==chr),]$length)
 }
 
+#' Title
+#'
+#' @param chr
+#' @param entries
+#'
+#' @return
+#' @export
+#'
+#' @examples
 getChrPloidy <- function(chr,entries){
   return(entries[which(entries$chr==chr),]$ploidy)
 }
@@ -74,8 +128,17 @@ getChrPloidy <- function(chr,entries){
 
 ##----------------------------------------------------
 ## create a list of the appropriate size and place
-## input in the appropriate bin 
+## input in the appropriate bin
 ##
+#' Title
+#'
+#' @param input
+#' @param chr
+#'
+#' @return
+#' @export
+#'
+#' @examples
 listify <- function(input,chr){
   lst = vector("list")
   lst[[chr]] = input
@@ -87,7 +150,16 @@ listify <- function(input,chr){
 ## function to combine lists returned from parallel
 ## intersection procedure
 ##
-combineBins <- function(a,b){ 
+#' Title
+#'
+#' @param a
+#' @param b
+#'
+#' @return
+#' @export
+#'
+#' @examples
+combineBins <- function(a,b){
   for(i in 1:length(a)){
     name=names(a)[i]
     if(is.null(b$name)){
@@ -96,11 +168,20 @@ combineBins <- function(a,b){
   }
   return(b)
 }
- 
+
 ##--------------------------------------------------
 ## convert read depth to log2 value,
 ## based on median
 ##
+#' Title
+#'
+#' @param val
+#' @param med
+#'
+#' @return
+#' @export
+#'
+#' @examples
 logScore <- function(val,med){
   if(is.na(val)){
     return(NA)
@@ -110,16 +191,24 @@ logScore <- function(val,med){
 
   }else{
     return(log2(val/med))
-  }    
+  }
 }
 
 
 ##--------------------------------------------------
 ## get the median read count
 ##
+#' Title
+#'
+#' @param rdo
+#'
+#' @return
+#' @export
+#'
+#' @examples
 getMedianReadCount <- function(rdo){
   tmp = c()
-  for(chr in rdo@entrypoints$chr){    
+  for(chr in rdo@entrypoints$chr){
     tmp = c(tmp,rdo@chrs[[chr]]$rd)
   }
   return(median(tmp,na.rm=TRUE))
@@ -128,10 +217,18 @@ getMedianReadCount <- function(rdo){
 ##--------------------------------------------------
 ## merge libraries into a single set of reads
 ##
+#' Title
+#'
+#' @param rdo
+#'
+#' @return
+#' @export
+#'
+#' @examples
 mergeLibraries <- function(rdo){
   counts = c();
-  ##for each chromosome  
-  for(chr in rdo@entrypoints$chr){    
+  ##for each chromosome
+  for(chr in rdo@entrypoints$chr){
     libNames = names(rdo@chrs[[1]])[grep("^rd.",names(rdo@chrs[[1]]))]
     tmp = rdo@chrs[[chr]][[libNames[1]]];
 
@@ -152,6 +249,15 @@ mergeLibraries <- function(rdo){
 ##---------------------------------------------------
 ## make a dataframe from our rdo object with chr, pos, log score
 ##
+#' Title
+#'
+#' @param binList
+#' @param params
+#'
+#' @return
+#' @export
+#'
+#' @examples
 makeDfLog <-function(binList,params){
   #drop the last window from each chr, because it's truncated
   for(i in names(binList)){
@@ -182,13 +288,22 @@ makeDfLog <-function(binList,params){
 ##---------------------------------------------------
 ## make a dataframe from our rdo object with chr, pos, score
 ##
+#' Title
+#'
+#' @param binList
+#' @param params
+#'
+#' @return
+#' @export
+#'
+#' @examples
 makeDf <-function(binList,params){
   #drop the last window from each chr, because it's truncated
   for(i in names(binList)){
     binList[[i]] = binList[[i]][1:(length(binList[[i]][,1])-1), ,drop=FALSE]
   }
 
-  ##get scores 
+  ##get scores
   logs <- foreach(i=names(binList), .combine="append") %do% {
     binList[[i]]$rd
   }
@@ -212,6 +327,15 @@ makeDf <-function(binList,params){
 ##---------------------------------------------------
 ## make a dataframe from a paired set of samples with chr, pos, log2 ratio
 ##
+#' Title
+#'
+#' @param nrm
+#' @param tum
+#'
+#' @return
+#' @export
+#'
+#' @examples
 makeDfLogPaired <- function(nrm,tum){
   ##create a merged data frame with windows common to both samples
   dftum = makeDf(tum@chrs,tum@binParams)
@@ -222,7 +346,7 @@ makeDfLogPaired <- function(nrm,tum){
 
   counts$score.x = counts$score.x/tum@binParams$med
   counts$score.y = counts$score.y/nrm@binParams$med
-  
+
   df = data.frame(chr=counts$chr,pos=counts$pos,score=log2(counts$score.x/counts$score.y))
   return(df)
 }
@@ -231,6 +355,15 @@ makeDfLogPaired <- function(nrm,tum){
 ##---------------------------------------------------
 ## make a dataframe from a paired set of samples with chr, pos, estimatedCn
 ##
+#' Title
+#'
+#' @param nrm
+#' @param tum
+#'
+#' @return
+#' @export
+#'
+#' @examples
 makeDfPaired <- function(nrm,tum){
   ##create a merged data frame with windows common to both samples
   dftum = makeDf(tum@chrs,tum@binParams)
@@ -238,7 +371,7 @@ makeDfPaired <- function(nrm,tum){
 
   counts=merge(dftum,dfnrm,by=c("chr","pos"))
   counts = counts[with(counts, order(chr,pos)), ]
- 
+
   counts$score.x = (counts$score.x/tum@binParams$med)
   counts$score.y = (counts$score.y/nrm@binParams$med)
 
@@ -249,14 +382,23 @@ makeDfPaired <- function(nrm,tum){
 ## make a dataframe from a particular library with count
 ## and mapablity
 ##
+#' Title
+#'
+#' @param rdo
+#' @param libNum
+#'
+#' @return
+#' @export
+#'
+#' @examples
 makeMapDf <-function(rdo,libNum){
   binList = rdo@chrs
-  ##drop the last window from each chr, because it's truncated  
+  ##drop the last window from each chr, because it's truncated
   for(i in names(rdo@chrs)){
     binList[[i]] = rdo@chrs[[i]][1:(length(rdo@chrs[[i]][,1])-1), ,drop=FALSE]
   }
 
-  ##get scores 
+  ##get scores
   counts <- foreach(i=names(binList), .combine="append") %do% {
     binList[[i]][[libNum]]
   }
@@ -265,7 +407,7 @@ makeMapDf <-function(rdo,libNum){
   maps <- foreach(i=names(binList), .combine="append") %do% {
     binList[[i]]$map
   }
-  
+
   return(data.frame(count=counts,map=maps))
 }
 
@@ -273,6 +415,16 @@ makeMapDf <-function(rdo,libNum){
 ##-----------------------------------------------------------
 ## some simple output functions
 ##
+#' Title
+#'
+#' @param rdo
+#' @param filename
+#' @param cnvHmmFormat
+#'
+#' @return
+#' @export
+#'
+#' @examples
 writeBins <- function(rdo, filename=NULL, cnvHmmFormat=FALSE){#, includeMapability=FALSE, includeGcContent=FALSE){
   #figure out filename
   if(is.null(filename)){
@@ -280,26 +432,26 @@ writeBins <- function(rdo, filename=NULL, cnvHmmFormat=FALSE){#, includeMapabili
     if(cnvHmmFormat){
       suffix = ".cnvhmm";
     }
-    
+
     if(!(is.null(rdo@params$prefix))){
       filename=paste(rdo@params$outputDirectory,"/",rdo@params$prefix,".rd.bins.",suffix,sep="")
     } else {
       filename=paste(rdo@params$outputDirectory,"/rd.bins.",suffix,sep="")
     }
   }
-   
+
   #add cnvhmm header if necessary
   appendFile=FALSE
   if(cnvHmmFormat){
     appendFile=TRUE
     ## #WholeGenome_Median:4639
     ## #2xReadCount:4639.00 in 10000 bp
-    a1 = paste("#WholeGenome_Median:",rdo@binParams$med,sep="")     
+    a1 = paste("#WholeGenome_Median:",rdo@binParams$med,sep="")
     b1 = paste("#2xReadCount:",rdo@binParams$med," in ",rdo@binParams$binSize," bp",sep="")
     c1 = "CHR\tPOS\tReadCount\tCopyNumber"
     write(c(a1,b1,c1), file=filename)
   } else
-    
+
   df = makeDf(rdo@chrs,rdo@binParams)
   df[,2]=df[,2]-(rdo@params$binSize/2)
 
@@ -307,16 +459,25 @@ writeBins <- function(rdo, filename=NULL, cnvHmmFormat=FALSE){#, includeMapabili
     cn = (df[,3]/rdo@binParams$med)*2
     df = cbind(df,cn)
   }
-  
+
   ##prevent scientific notation
   options(scipen=999)
   write.table(df, file=filename, row.names=F, col.names=F, quote=F, sep="\t", append=appendFile)
 }
 
+#' Title
+#'
+#' @param nrm
+#' @param tum
+#'
+#' @return
+#' @export
+#'
+#' @examples
 writePairedBins <- function(nrm,tum){
   df = makeDfPaired(nrm,tum);
   options(scipen=999)
-  filename=paste(tum@params$outputDirectory,"/rd.bins.dat",sep="") 
+  filename=paste(tum@params$outputDirectory,"/rd.bins.dat",sep="")
   write.table(df, file=filename, row.names=F, col.names=F, quote=F, sep="\t")
 }
 
@@ -328,6 +489,16 @@ writeThresholds <- function(rdo){
   write.table(t(cbind(a1,a2,a3)),file=paste(rdo@params$outputDirectory,"/thresholds.dat",sep=""),sep="\t",quote=F,row.names=T,col.names=F)
 }
 
+#' Title
+#'
+#' @param segs
+#' @param rdo
+#' @param filename
+#'
+#' @return
+#' @export
+#'
+#' @examples
 writeSegs <- function(segs,rdo,filename="segs.dat"){
   options(scipen=999)
   write.table(segs, file=paste(rdo@params$outputDirectory,"/",filename,sep=""), sep="\t", quote=F, row.names=F, col.names=F)
@@ -342,6 +513,14 @@ writeAlts <- function(segs,rdo,filename="alts.dat"){
 ##-----------------------------------------------------------
 ## dumps the parameters to a file
 ##
+#' Title
+#'
+#' @param rdo
+#'
+#' @return
+#' @export
+#'
+#' @examples
 dumpParams <- function(rdo){
   write.table(t(rdo@params),paste(rdo@params$outputDirectory,"/params.",rdo@params$prefix,".txt",sep=""),sep="\t",quote=F,col.names=F)
   write.table(t(rdo@binParams),paste(rdo@params$outputDirectory,"/params.",rdo@params$prefix,".txt",sep=""),sep="\t",quote=F,col.names=F,append=T)
@@ -362,21 +541,21 @@ dumpParams <- function(rdo){
 ## ## data(Oats)
 ## ## sort(Oats, by= ~nitro-Variety)
 ## sortDataFrame <- function(x, by){
- 
+
 ##     if(by[[1]] != "~")
 ##         stop("Argument 'by' must be a one-sided formula.")
- 
+
 ##     # Make the formula into character and remove spaces
-##     formc <- as.character(by[2]) 
-##     formc <- gsub(" ", "", formc) 
+##     formc <- as.character(by[2])
+##     formc <- gsub(" ", "", formc)
 ##     # If the first character is not + or -, add +
 ##     if(!is.element(substring(formc, 1, 1), c("+", "-")))
 ##         formc <- paste("+", formc, sep = "")
- 
+
 ##     # Extract the variables from the formula
-##     vars <- unlist(strsplit(formc, "[\\+\\-]"))    
+##     vars <- unlist(strsplit(formc, "[\\+\\-]"))
 ##     vars <- vars[vars != ""] # Remove any extra "" terms
- 
+
 ##     # Build a list of arguments to pass to "order" function
 ##     calllist <- list()
 ##     pos <- 1 # Position of + or -
@@ -404,16 +583,25 @@ dumpParams <- function(rdo){
 ##-----------------------------------------------------------
 ## pull out the subset of reads with a specific read length
 ##
-subsetByReadLength <- function(rdo,length){  
+#' Title
+#'
+#' @param rdo
+#' @param length
+#'
+#' @return
+#' @export
+#'
+#' @examples
+subsetByReadLength <- function(rdo,length){
   ##get the names of columns with this read length
   libs = rdo@readInfo[which(rdo@readInfo$readlength==length),]$lib
   tmp=c();for(l in libs){tmp=c(tmp,paste("rd.",l,".",length,sep=""))}
   libs = tmp;
   cols=names(rdo@chrs[[1]]) %in% libs
   #do the subset
-  for(i in names(rdo@chrs)){    
+  for(i in names(rdo@chrs)){
     rdo@chrs[[i]] = rdo@chrs[[i]][cols]
-  }  
+  }
   return(rdo)
 }
 
@@ -421,11 +609,20 @@ subsetByReadLength <- function(rdo,length){
 ##-----------------------------------------------------------
 ## restore reads that have been corrected (in rdo2) back into rdo
 ##
-replaceReadCounts <- function(rdo,rdo2){  
+#' Title
+#'
+#' @param rdo
+#' @param rdo2
+#'
+#' @return
+#' @export
+#'
+#' @examples
+replaceReadCounts <- function(rdo,rdo2){
   ##get the names of columns in rdo2
   libs=names(rdo2@chrs[[1]])
   for(i in 1:length(libs)){
-    for(chr in names(rdo@chrs)){    
+    for(chr in names(rdo@chrs)){
       rdo@chrs[[chr]][which(names(rdo@chrs[[1]]) %in% libs[i])] = rdo2@chrs[[chr]][i]
     }
   }
@@ -436,6 +633,16 @@ replaceReadCounts <- function(rdo,rdo2){
 ## find the appropriate annotations to use with this data
 ## if it doesn't exist, warn the user
 ##
+#' Title
+#'
+#' @param annodir
+#' @param readlength
+#' @param tolerance
+#'
+#' @return
+#' @export
+#'
+#' @examples
 getAnnoDir <- function(annodir, readlength, tolerance=10){
   idealDir = paste(annodir,"/readlength.",readlength,sep="")
   if(file.exists(idealDir)){
@@ -449,7 +656,7 @@ getAnnoDir <- function(annodir, readlength, tolerance=10){
 
   dirs = sapply(Sys.glob(paste(annodir,"/readlength*",sep="")), getlens)
   diff = sort(abs(dirs-readlength))
-  if(diff[1] > tolerance){    
+  if(diff[1] > tolerance){
     print(paste("ERROR: no annotation files exists that match a read length of ",readlength," (+/-",tolerance,") ",sep=""))
     print("consult the documentation for instructions on downloading or creating these files.")
     stop()

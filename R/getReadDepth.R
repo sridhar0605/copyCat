@@ -1,6 +1,14 @@
 ##------------------------------------------------
 ## Given an rd object, add the number of reads in
 ## each bin.
+#' Title
+#'
+#' @param rdo
+#'
+#' @return
+#' @export
+#'
+#' @examples
 getReadDepth <- function(rdo){
   ##options to run bam-window from this package could go here
 
@@ -19,6 +27,14 @@ getReadDepth <- function(rdo){
 
 ##--------------------------------------------------
 ## create rdbins from a bin file (from bam-window output)
+#' Title
+#'
+#' @param rdo
+#'
+#' @return
+#' @export
+#'
+#' @examples
 getWindowBins <- function(rdo){
   params=rdo@params
   winds = read.table(params$binFile,sep="\t",quote="", header=T)
@@ -69,6 +85,15 @@ getWindowBins <- function(rdo){
 
 
   ##create a list of all the libraries and read lengths
+#' Title
+#'
+#' @param winds
+#' @param rdo
+#'
+#' @return
+#' @export
+#'
+#' @examples
   createReadInfo <- function(winds, rdo){
     dataColNames = names(winds)[3:length(winds)]
     readInfo = NULL;
@@ -102,6 +127,15 @@ getWindowBins <- function(rdo){
 
   ##we could have multiple libraries with the same read lengths
   ##if we aren't doing per-library correction, merge them
+#' Title
+#'
+#' @param winds
+#' @param rdo
+#'
+#' @return
+#' @export
+#'
+#' @examples
   mergeLibraries <- function(winds,rdo){
     torm=c()
     for(i in names(table(rdo@readInfo$readlength))){
@@ -196,6 +230,15 @@ getWindowBins <- function(rdo){
 ## add bins to the structure
 ## (from another library, for example)
 ##
+#' Title
+#'
+#' @param rdo
+#' @param rdo2
+#'
+#' @return
+#' @export
+#'
+#' @examples
 addBins <- function(rdo,rdo2){
   for(chr in rdo@entrypoints$chr){
     if (length(rdo@chrs[[chr]]$rd) == length(rdo2@chrs[[chr]]$rd)){
@@ -212,6 +255,16 @@ addBins <- function(rdo,rdo2){
 ## subtract bins from the structure
 ## (from another library, for example)
 ##
+#' Title
+#'
+#' @param rdo
+#' @param rdo2
+#' @param normalization
+#'
+#' @return
+#' @export
+#'
+#' @examples
 subtractBins <- function(rdo,rdo2,normalization=FALSE){
   if(normalization){
     sum1 = 0
